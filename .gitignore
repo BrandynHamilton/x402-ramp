@@ -1,0 +1,8 @@
+*.env
+*.venv
+*.stellar
+*.pyc
+__pycache__/
+*.github
+backend/node_modules
+**/node_modules/
