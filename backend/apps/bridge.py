@@ -139,8 +139,8 @@ def listen_for_payments():
 class BridgeRequest(BaseModel):
     apikey: str  # user api key
     target_chain: str # target chain (e.g., "base", "stellar")
-    source_address: str  # source address (EVM or Stellar)
-    target_address: str  # target address (EVM or Stellar)
+    evm_address: str  # source address (EVM or Stellar)
+    stellar_address: str  # target address (EVM or Stellar)
     amount: float  # amount to bridge
 
 def send_usdc_from_bridge_wallet(recipient, amount):
@@ -195,26 +195,28 @@ async def monitor_transfer_and_bridge(req: BridgeRequest, request_id: str):
     print(f"Background task started for request: {req}")
     if req.target_chain == "stellar-testnet":
         # EVM → Stellar bridge
-        print(f"🔁 Watching for USDC from {req.source_address} on EVM...")
+        print(f"🔁 Watching for USDC from {req.evm_address} on EVM...")
 
         while True:
-            tx = check_for_usdc_transfer(req.source_address, int(req.amount * (10**6)))  # USDC = 6 decimals
+            tx = check_for_usdc_transfer(req.evm_address, int(req.amount * (10**6)))  # USDC = 6 decimals
             if tx:
                 print(f"✅ EVM Transfer detected: {tx}")
-                stellar_tx = send_stellar_payment(req.target_address, req.amount, memo=f"Bridge from {req.source_address[0:5]}")
-                cache[request_id].update({"status": "completed", "target_tx": stellar_tx})
+                stellar_tx = send_stellar_payment(req.stellar_address, req.amount, memo=f"Bridge from {req.evm_address[0:5]}")
+                info = dict(cache[request_id])  # get a mutable copy
+                info.update({"status": "completed", "target_tx": stellar_tx})
+                cache[request_id] = info
                 print(f"✅ Sent to Stellar: {stellar_tx}")
                 break
             await asyncio.sleep(5)
 
     elif req.target_chain == "base-sepolia":
-        # Stellar → EVM bridge 
-        print(f"🔁 Watching for USDC from {req.source_address} on Stellar...")
+        # Stellar → EVM bridge
+        print(f"🔁 Watching for USDC from {req.stellar_address} on Stellar...")
 
         seen = set()
         for payment in server.payments().for_account(stellar_kp.public_key).cursor("now").stream():
             if payment["type"] == "payment" and \
-               payment["from"] == req.source_address and \
+               payment["from"] == req.stellar_address and \
                payment["to"] == stellar_kp.public_key and \
                float(payment["amount"]) >= req.amount and \
                payment["id"] not in seen:
@@ -222,7 +224,7 @@ async def monitor_transfer_and_bridge(req: BridgeRequest, request_id: str):
                 seen.add(payment["id"])
                 print(f"✅ Stellar Payment detected: {payment}")
                 # For MVP, send from EVM bridge wallet to user
-                evm_tx = send_usdc_from_bridge_wallet(req.target_address, req.amount)
+                evm_tx = send_usdc_from_bridge_wallet(req.evm_address, req.amount)
                 info = dict(cache[request_id])  # get a mutable copy
                 info.update({"status": "completed", "target_tx": evm_tx})
                 cache[request_id] = info        # write back to cache
@@ -276,7 +278,9 @@ async def request_status(request_id: str):
         info["request"] = dict(info["request"])  # copy request dict
         info["request"].pop("apikey", None)
         print(f'info: {info}')
-    return {"status": info["status"], "info": info}
+    status = info.get("status")
+    info.pop("status", None)
+    return {"status": status, "info": info}
 
 @app.get("/bridge/balance")
 async def get_balance():
@@ -316,11 +320,11 @@ async def request_bridge(req: BridgeRequest, background_tasks: BackgroundTasks):
     # Validate address format
     if req.target_chain == "stellar-testnet":
         bridge_address = EVM_ADDRESS
-        if not is_valid_stellar_address(req.target_address) or not is_valid_evm_address(req.source_address):
+        if not is_valid_stellar_address(req.stellar_address) or not is_valid_evm_address(req.evm_address):
             raise HTTPException(status_code=400, detail="Invalid source/target address format for EVM → Stellar")
         
         # Check if recipient has trustline to USDC
-        recipient_account = server.accounts().account_id(req.target_address).call()
+        recipient_account = server.accounts().account_id(req.stellar_address).call()
         if not has_trustline(recipient_account, usdc_asset_code, STELLAR_TESTNET_USD_ISSUER):
             raise HTTPException(status_code=400, detail="Recipient does not have a trustline to USDC")
         
@@ -331,7 +335,7 @@ async def request_bridge(req: BridgeRequest, background_tasks: BackgroundTasks):
 
     elif req.target_chain == "base-sepolia":
         bridge_address = STELLAR_ADDRESS
-        if not is_valid_stellar_address(req.source_address) or not is_valid_evm_address(req.target_address):
+        if not is_valid_stellar_address(req.stellar_address) or not is_valid_evm_address(req.evm_address):
             raise HTTPException(status_code=400, detail="Invalid source/target address format for Stellar → EVM")
         
         # Check Base (EVM) balance of bridge wallet
