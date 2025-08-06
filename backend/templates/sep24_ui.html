@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Interactive UI</title>
+  <style>
+    html, body, iframe {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe
+    src="{{ base_url }}?transaction_id={{ transaction_id }}&token={{ token }}"
+    allow="clipboard-write"
+  ></iframe>
+</body>
+</html>

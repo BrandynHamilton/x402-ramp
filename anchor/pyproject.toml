@@ -1,11 +1,10 @@
 [project]
-name = "x402-ramp"
+name = "x402-ramp-anchor"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "click",
     "diskcache>=5.6.3",
-    "eth-account>=0.13.7",
     "fastapi>=0.116.1",
     "httpx>=0.28.1",
     "jinja2>=3.1.6",
