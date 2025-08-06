@@ -135,11 +135,11 @@ async def withdrawal_ui(request: Request, amount: float):
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {jwt_token}"}
 
     withdraw_req = {
-    "amount": amount_str,
-    "asset_code": "USDC",
-    "account": kp.public_key,
-    "type": "ACH",
-    "claimable_balance_supported": "false"
+        "amount": amount_str,
+        "asset_code": "USDC",
+        "account": kp.public_key,
+        "type": "ACH",
+        "claimable_balance_supported": "false"
     }
 
     response = requests.get(
