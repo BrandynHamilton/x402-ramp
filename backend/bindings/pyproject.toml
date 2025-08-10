@@ -1,0 +1,14 @@
+[project]
+name = "bindings"
+version = "0.1.0"
+description = "Client bindings for x402 contracts"
+authors = [{name = "Your Name", email = "you@example.com"}]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "stellar-sdk"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

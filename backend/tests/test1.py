@@ -5,8 +5,11 @@ import requests
 load_dotenv()
 
 STELLAR_PRIVATE_KEY = os.getenv("STELLAR_PRIVATE_KEY")
+kp = Keypair.from_secret(STELLAR_PRIVATE_KEY)
+print(f"Account: {kp.public_key}")
 BRIDGE_STELLAR_PRIVATE_KEY = os.getenv("BRIDGE_STELLAR_PRIVATE_KEY")
 STELLAR_TESTNET_USD_ISSUER = os.getenv("STELLAR_TESTNET_USD_ISSUER", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5")
+THIRD_PARTY_STELLAR_KEY = os.getenv("THIRD_PARTY_STELLAR_KEY")
 usdc_asset_code = "USDC"
 
 server = Server(horizon_url="https://horizon-testnet.stellar.org")
@@ -24,7 +27,7 @@ def has_trustline(account, asset_code, issuer):
             return True
     return False
 
-for key in [BRIDGE_STELLAR_PRIVATE_KEY, STELLAR_PRIVATE_KEY]:
+for key in [BRIDGE_STELLAR_PRIVATE_KEY, STELLAR_PRIVATE_KEY, THIRD_PARTY_STELLAR_KEY, "SBYAT7FNQ54ZA46AMCM4FQK5FHIYMFQ33PN4ADXOVTEUE3ECXCPPLO7O"]:
     source_kp = Keypair.from_secret(key)  # Your Stellar private key
     # source_account = server.load_account(account_id=source_kp.public_key)
     try:

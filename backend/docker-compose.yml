@@ -1,0 +1,10 @@
+# docker-compose.yml
+services:
+  bridge-server:
+    build:
+      context: ./apps
+    container_name: bridge-server
+    env_file:
+      - ../.env
+    ports:
+      - "9000:9000"

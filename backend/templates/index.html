@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>x402 Ramp UI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; }
+        h1 { color: #343a40; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input[type="number"], input[type="submit"], select, input[type="text"], input[type="email"], input[type="tel"] {
+            width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box;
+        }
+        pre { background: #efefef; padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+        pre#anchor-toml {
+            text-align: left;
+            white-space: normal;
+            font-family: inherit;
+            word-break: break-word;
+        }
+        .tab-content { margin-top: 20px; }
+        #action-result a {
+            word-break: break-all; /* force wrap anywhere */
+            overflow-wrap: break-word; /* better wrap for most browsers */
+            display: inline-block;
+            max-width: 100%;
+        }
+        #lang-toggle {
+            margin: 10px;
+            padding: 6px 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        label {
+            font-weight: 600;
+        }
+        fieldset {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        legend {
+            font-weight: bold;
+            padding: 0 6px;
+        }
+        .top-bar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .top-bar button {
+            margin: 0 5px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <button onclick="showTab('main')" id="btn-main">Main</button>
+        <button onclick="showTab('endpoint')" id="btn-endpoint">Endpoint</button>
+        <button onclick="showTab('anchor')" id="btn-anchor">Anchor</button>
+        <button id="lang-toggle" onclick="toggleLanguage()">Español</button>
+    </div>
+    <div class="container">
+        <div id="main-tab" class="tab-content">
+            <h1 id="title">x402 Ramp</h1>
+
+            <p id="welcome-text">Welcome to the x402 Ramp UI. Use this interface to check balances and perform actions like bridging or withdrawing funds.</p>
+
+            <h2 id="check-balances-title">Check Balances</h2>
+            <form id="balance-form">
+                <input type="submit" value="Check Balance" id="check-balance-btn">
+            </form>
+            <pre id="balance-result"></pre>
+
+            <h2 id="bridge-withdraw-title">Bridge / Withdraw</h2>
+            <form id="action-form">
+                <label for="amount" id="label-amount">Amount:</label>
+                <input type="number" step="0.01" id="amount" placeholder="Amount" required>
+
+                <label for="mode" id="label-action">Action:</label>
+                <select id="mode" required>
+                    <option value="bridge" id="opt-bridge">Bridge Only</option>
+                    <option value="withdraw" id="opt-withdraw">Withdraw Only</option>
+                    <option value="bridge_then_withdraw" id="opt-bridge-then-withdraw">Bridge + Withdraw</option>
+                </select>
+
+                <label for="currency" id="label-currency">Currency (optional):</label>
+                <select id="currency">
+                    <option value="USD">USD</option>
+                    <option value="PAB">PAB</option>
+                    <option value="MXN">MXN</option>
+                    <!-- add more -->
+                </select>
+
+                <label for="country" id="label-country">Country (optional):</label>
+                <select id="country">
+                    <option value="PA">Panama</option>
+                    <option value="MX">Mexico</option>
+                    <!-- add more -->
+                </select>
+
+                <fieldset style="margin-top:20px;">
+                    <legend id="kyc-legend">KYC Information</legend>
+                    
+                    <label>
+                        <input type="radio" name="kycOption" value="stored" checked>
+                        <span id="stored-kyc">Stored KYC</span>
+                    </label>
+                    <label style="margin-left: 20px;">
+                        <input type="radio" name="kycOption" value="new">
+                        <span id="new-kyc">New KYC</span>
+                    </label>
+
+                    <div id="new-kyc-fields" style="margin-top: 10px; display: none;">
+                        <label for="kybName" id="label-kybName">Business Name:</label>
+                        <input type="text" id="kybName" placeholder="Enter business name" />
+
+                        <label for="kycName" id="label-kycName">Full Name:</label>
+                        <input type="text" id="kycName" placeholder="Enter representative name" />
+                        
+                        <label for="kycEmail" id="label-kycEmail">Email:</label>
+                        <input type="email" id="kycEmail" placeholder="Enter email" />
+                        
+                        <label for="kycPhone" id="label-kycPhone">Phone Number:</label>
+                        <input type="tel" id="kycPhone" placeholder="Enter phone number" />
+
+                        <label for="taxId" id="label-taxId">Tax ID:</label>
+                        <input type="text" id="taxId" placeholder="Enter tax ID" />
+
+                        <label for="bankName" id="label-bankName">Bank Name:</label>
+                        <input type="text" id="bankName" placeholder="Enter bank name" />
+
+                        <label for="bankAccount" id="label-bankAccount">Bank Account Number:</label>
+                        <input type="text" id="bankAccount" placeholder="Enter bank account number" />
+                    </div>
+                </fieldset>
+
+                <input type="submit" value="Execute" id="execute-btn">
+            </form>
+
+            <p id="status" style="font-weight:bold; color: green;"></p>
+            <pre id="action-result"></pre>
+
+        </div>
+        <div id="endpoint-tab" class="tab-content" style="display:none;">
+            <h2 id="endpoint-title">x402 Endpoint Information</h2>
+            <form id="metrics-form">
+            </form>
+            <pre id="wallet-metrics-result"></pre>
+        </div>
+        <div id="anchor-tab" class="tab-content" style="display:none;">
+            <h2 id="anchor-title">Anchor Information</h2>
+            <form id="toml-form">
+            </form>
+            <pre id="anchor-toml"></pre>
+
+            <form id="anchor-info">
+                <!-- <input type="submit" value="Fetch Anchor Info"> -->
+            </form>
+            <!-- <pre id="anchor-info-result"></pre> -->
+        </div>
+    </div>
+
+    <script>
+        // Translation dictionary
+        const translations = {
+            en: {
+                btnMain: "Main",
+                btnEndpoint: "Endpoint",
+                btnAnchor: "Anchor",
+                langToggle: "Español",
+
+                title: "x402 Ramp",
+                welcomeText: "Welcome to the x402 Ramp UI. Use this interface to check balances and perform actions like bridging or withdrawing funds.",
+                checkBalancesTitle: "Check Balances",
+                checkBalanceBtn: "Check Balance",
+                bridgeWithdrawTitle: "Bridge / Withdraw",
+                labelAmount: "Amount:",
+                amountPlaceholder: "Amount",
+                labelAction: "Action:",
+                optBridge: "Bridge Only",
+                optWithdraw: "Withdraw Only",
+                optBridgeThenWithdraw: "Bridge + Withdraw",
+                labelCurrency: "Currency (optional):",
+                labelCountry: "Country (optional):",
+                kycLegend: "KYC Information",
+                storedKyc: "Stored KYC",
+                newKyc: "New KYC",
+                labelKybName: "Business Name:",
+                labelKycName: "Full Name:",
+                labelKycEmail: "Email:",
+                labelKycPhone: "Phone Number:",
+                labelTaxId: "Tax ID:",
+                labelBankName: "Bank Name:",
+                labelBankAccount: "Bank Account Number:",
+                executeBtn: "Execute",
+                statusValidAmount: "Enter a valid amount.",
+                statusBridging: "Bridging...",
+                statusWithdrawing: "Withdrawing...",
+                statusBridgingWithdrawing: "Bridging and Withdrawing...",
+                statusDone: "Done.",
+                statusError: "Error occurred.",
+                bridgeTx: "Bridge TX:",
+                withdrawTx: "Withdraw TX:",
+                messageLabel: "Message:",
+            },
+            es: {
+                btnMain: "Principal",
+                btnEndpoint: "Punto final",
+                btnAnchor: "Ancla",
+                langToggle: "English",
+
+                title: "x402 Ramp",
+                welcomeText: "Bienvenido a la interfaz de x402 Ramp. Use esta interfaz para consultar saldos y realizar acciones como bridgeo o retiro de fondos.",
+                checkBalancesTitle: "Consultar Saldos",
+                checkBalanceBtn: "Consultar Saldo",
+                bridgeWithdrawTitle: "Bridge / Retiro",
+                labelAmount: "Cantidad:",
+                amountPlaceholder: "Cantidad",
+                labelAction: "Acción:",
+                optBridge: "Solo Bridge",
+                optWithdraw: "Solo Retiro",
+                optBridgeThenWithdraw: "Bridge + Retiro",
+                labelCurrency: "Moneda (opcional):",
+                labelCountry: "País (opcional):",
+                kycLegend: "Información KYC",
+                storedKyc: "KYC Guardado",
+                newKyc: "Nuevo KYC",
+                labelKybName: "Nombre Comercial:",
+                labelKycName: "Nombre Completo:",
+                labelKycEmail: "Correo Electrónico:",
+                labelKycPhone: "Número de Teléfono:",
+                labelTaxId: "ID Fiscal:",
+                labelBankName: "Nombre del Banco:",
+                labelBankAccount: "Número de Cuenta Bancaria:",
+                executeBtn: "Ejecutar",
+                statusValidAmount: "Ingrese una cantidad válida.",
+                statusBridging: "Realizando bridge...",
+                statusWithdrawing: "Realizando retiro...",
+                statusBridgingWithdrawing: "Realizando bridge y retiro...",
+                statusDone: "Listo.",
+                statusError: "Ocurrió un error.",
+                bridgeTx: "TX de Bridge:",
+                withdrawTx: "TX de Retiro:",
+                messageLabel: "Mensaje:",
+            }
+        };
+
+        let currentLang = 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            // Update lang toggle button text
+            document.getElementById('lang-toggle').textContent = translations[lang].langToggle;
+
+            // Update buttons in top bar
+            document.getElementById('btn-main').textContent = translations[lang].btnMain;
+            document.getElementById('btn-endpoint').textContent = translations[lang].btnEndpoint;
+            document.getElementById('btn-anchor').textContent = translations[lang].btnAnchor;
+
+            // Update all UI text elements
+            document.getElementById('title').textContent = translations[lang].title;
+            document.getElementById('welcome-text').textContent = translations[lang].welcomeText;
+            document.getElementById('check-balances-title').textContent = translations[lang].checkBalancesTitle;
+            document.getElementById('check-balance-btn').value = translations[lang].checkBalanceBtn;
+            document.getElementById('bridge-withdraw-title').textContent = translations[lang].bridgeWithdrawTitle;
+            document.getElementById('label-amount').textContent = translations[lang].labelAmount;
+            document.getElementById('amount').placeholder = translations[lang].amountPlaceholder;
+            document.getElementById('label-action').textContent = translations[lang].labelAction;
+            document.getElementById('opt-bridge').textContent = translations[lang].optBridge;
+            document.getElementById('opt-withdraw').textContent = translations[lang].optWithdraw;
+            document.getElementById('opt-bridge-then-withdraw').textContent = translations[lang].optBridgeThenWithdraw;
+            document.getElementById('label-currency').textContent = translations[lang].labelCurrency;
+            document.getElementById('label-country').textContent = translations[lang].labelCountry;
+            document.getElementById('kyc-legend').textContent = translations[lang].kycLegend;
+            document.getElementById('stored-kyc').textContent = translations[lang].storedKyc;
+            document.getElementById('new-kyc').textContent = translations[lang].newKyc;
+            document.getElementById('label-kybName').textContent = translations[lang].labelKybName;
+            document.getElementById('kybName').placeholder = translations[lang].labelKybName;
+            document.getElementById('label-kycName').textContent = translations[lang].labelKycName;
+            document.getElementById('kycName').placeholder = translations[lang].labelKycName;
+            document.getElementById('label-kycEmail').textContent = translations[lang].labelKycEmail;
+            document.getElementById('kycEmail').placeholder = translations[lang].labelKycEmail;
+            document.getElementById('label-kycPhone').textContent = translations[lang].labelKycPhone;
+            document.getElementById('kycPhone').placeholder = translations[lang].labelKycPhone;
+            document.getElementById('label-taxId').textContent = translations[lang].labelTaxId;
+            document.getElementById('taxId').placeholder = translations[lang].labelTaxId;
+            document.getElementById('label-bankName').textContent = translations[lang].labelBankName;
+            document.getElementById('bankName').placeholder = translations[lang].labelBankName;
+            document.getElementById('label-bankAccount').textContent = translations[lang].labelBankAccount;
+            document.getElementById('bankAccount').placeholder = translations[lang].labelBankAccount;
+            document.getElementById('execute-btn').value = translations[lang].executeBtn;
+
+            // Update status and result texts if any (optional)
+            const statusElem = document.getElementById('status');
+            if (statusElem.textContent === translations[lang === 'en' ? 'es' : 'en'].statusValidAmount) {
+                statusElem.textContent = translations[lang].statusValidAmount;
+            }
+            if (statusElem.textContent === translations[lang === 'en' ? 'es' : 'en'].statusBridging) {
+                statusElem.textContent = translations[lang].statusBridging;
+            }
+            if (statusElem.textContent === translations[lang === 'en' ? 'es' : 'en'].statusWithdrawing) {
+                statusElem.textContent = translations[lang].statusWithdrawing;
+            }
+            if (statusElem.textContent === translations[lang === 'en' ? 'es' : 'en'].statusBridgingWithdrawing) {
+                statusElem.textContent = translations[lang].statusBridgingWithdrawing;
+            }
+            if (statusElem.textContent === translations[lang === 'en' ? 'es' : 'en'].statusDone) {
+                statusElem.textContent = translations[lang].statusDone;
+            }
+            if (statusElem.textContent === translations[lang === 'en' ? 'es' : 'en'].statusError) {
+                statusElem.textContent = translations[lang].statusError;
+            }
+        }
+
+        function toggleLanguage() {
+            setLanguage(currentLang === 'en' ? 'es' : 'en');
+        }
+
+        // Show/hide new KYC form fields based on radio selection
+        document.querySelectorAll('input[name="kycOption"]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+                const newKycFields = document.getElementById('new-kyc-fields');
+                if (radio.value === 'new' && radio.checked) {
+                    newKycFields.style.display = 'block';
+                } else if (radio.value === 'stored' && radio.checked) {
+                    newKycFields.style.display = 'none';
+                }
+            });
+        });
+
+        // Tab switching logic
+        function showTab(tab) {
+            document.getElementById('main-tab').style.display = (tab === 'main') ? 'block' : 'none';
+            document.getElementById('endpoint-tab').style.display = (tab === 'endpoint') ? 'block' : 'none';
+            document.getElementById('anchor-tab').style.display = (tab === 'anchor') ? 'block' : 'none';
+        }
+
+        // On page load setup
+        window.onload = () => {
+            setLanguage(currentLang);
+
+            fetchBalance();
+            fetchAnchorToml();
+            fetchWalletMetrics();
+
+            document.getElementById('balance-form').onsubmit = async (e) => {
+                e.preventDefault();
+                await fetchBalance();
+            };
+
+            document.getElementById('action-form').onsubmit = async (e) => {
+                e.preventDefault();
+
+                const amount = parseFloat(document.getElementById('amount').value);
+                const mode = document.getElementById('mode').value;
+                const currency = document.getElementById('currency').value;
+                const country = document.getElementById('country').value;
+                const statusElem = document.getElementById('status');
+                const resultElem = document.getElementById('action-result');
+
+                if (isNaN(amount) || amount <= 0) {
+                    statusElem.textContent = translations[currentLang].statusValidAmount;
+                    return;
+                }
+
+                statusElem.textContent = mode === "bridge" ? translations[currentLang].statusBridging :
+                                        mode === "withdraw" ? translations[currentLang].statusWithdrawing :
+                                        translations[currentLang].statusBridgingWithdrawing;
+
+                try {
+                    let bridgeUrl = "";
+                    let withdrawUrl = "";
+                    let message = "";
+
+                    if (mode === "bridge") {
+                        const res = await fetch(`/bridge?amount=${amount}`);
+                        const data = await res.json();
+                        bridgeUrl = data.bridge_tx_url || "";
+                        message = data.message || "";
+                    } 
+                    else if (mode === "withdraw") {
+                        const res = await fetch(`/withdraw?amount=${amount}&currency=${currency}&country=${country}`);
+                        const data = await res.json();
+                        withdrawUrl = data.withdraw_tx_url || "";
+                        message = data.message || "";
+                    } 
+                    else if (mode === "bridge_then_withdraw") {
+                        const res1 = await fetch(`/bridge?amount=${amount}`);
+                        const data1 = await res1.json();
+                        bridgeUrl = data1.bridge_tx_url || "";
+
+                        const res2 = await fetch(`/withdraw?amount=${amount}&currency=${currency}&country=${country}`);
+                        const data2 = await res2.json();
+                        withdrawUrl = data2.withdraw_tx_url || "";
+                        message = data2.message || "";
+                    }
+
+                    let html = "";
+                    if (bridgeUrl) {
+                        html += `<div><strong>${translations[currentLang].bridgeTx}</strong> <a href="${bridgeUrl}" target="_blank">${bridgeUrl}</a></div>`;
+                    }
+                    if (withdrawUrl) {
+                        html += `<div><strong>${translations[currentLang].withdrawTx}</strong> <a href="${withdrawUrl}" target="_blank">${withdrawUrl}</a></div>`;
+                    }
+                    if (message) {
+                        const messageText = typeof message === "object" ? 
+                                            `<pre style="white-space: pre-wrap; margin: 5px 0; font-size: 0.9em;">${JSON.stringify(message, null, 2)}</pre>` : 
+                                            message;
+                        html += `<div style="margin-top:10px; color: #555;"><em>${translations[currentLang].messageLabel}</em> ${messageText}</div>`;
+                    }
+
+                    resultElem.innerHTML = html || (currentLang === 'en' ? "No transaction links returned." : "No se devolvieron enlaces de transacción.");
+                    statusElem.textContent = translations[currentLang].statusDone;
+                    fetchBalance();
+                } catch (err) {
+                    resultElem.textContent = err.toString();
+                    statusElem.textContent = translations[currentLang].statusError;
+                }
+            };
+        };
+
+        async function fetchBalance() {
+            const res = await fetch('/balance');
+            const json = await res.json();
+            const resultElem = document.getElementById('balance-result');
+            resultElem.textContent = JSON.stringify(json, null, 2);
+        }
+
+        async function fetchAnchorToml() {
+            const res = await fetch('/anchor-toml');
+            const json = await res.json();
+
+            const org = json.anchor_toml;
+            const tomlElem = document.getElementById('anchor-toml');
+
+            if (org && org.ORG_NAME) {
+                tomlElem.innerHTML = `
+                    <strong>${currentLang === 'en' ? 'Organization Name:' : 'Nombre de la organización:'}</strong> ${org.ORG_NAME}<br>
+                    <strong>${currentLang === 'en' ? 'Website:' : 'Sitio web:'}</strong> <a href="${org.ORG_URL}" target="_blank">${org.ORG_URL}</a><br>
+                    <strong>${currentLang === 'en' ? 'Description:' : 'Descripción:'}</strong> ${org.ORG_DESCRIPTION}
+                `;
+            } else {
+                tomlElem.textContent = currentLang === 'en' ? "No organization info found." : "No se encontró información de la organización.";
+            }
+        }
+
+        async function fetchWalletMetrics() {
+            const res = await fetch('/wallet-metrics');
+            const json = await res.json();
+            const resultElem = document.getElementById('wallet-metrics-result');
+            resultElem.textContent = JSON.stringify(json, null, 2);
+        }
+    </script>
+</body>
+</html>

@@ -7,3 +7,6 @@
 backend/node_modules
 **/node_modules/
 *notes.txt
+/basic-payment-app
+/sep24-reference-ui
+*.mp4

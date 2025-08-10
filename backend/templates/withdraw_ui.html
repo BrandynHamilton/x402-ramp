@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SEP-24 Withdrawal</title>
+  <style>
+    html, body, iframe {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe
+    src="{{ base_url }}?transaction_id={{ transaction_id }}&token={{ token }}"
+    allow="clipboard-write"
+  ></iframe>
+</body>
+</html>

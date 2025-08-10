@@ -1,0 +1,82 @@
+items:
+  - id: stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+    distribution_account: GBLSAHONJRODSFTLOV225NZR4LHICH63RIFQTQN37L5CRTR2IMQ5UEK7
+    significant_decimals: 2
+    sep24:
+      enabled: true
+      deposit:
+        enabled: true
+        min_amount: 0
+        max_amount: 10
+        methods:
+          - SEPA
+          - SWIFT
+          - ACH
+      withdraw:
+        enabled: true
+        min_amount: 0
+        max_amount: 10
+        methods:
+          - bank_account
+          - cash
+          - ACH
+    sep6:
+      enabled: true
+      deposit:
+        enabled: true
+        min_amount: 1
+        max_amount: 100000
+        methods:
+          - ACH
+          - bank_account
+        fields:
+          ACH:
+            - name: account
+              description: Your ACH bank account number
+            - name: routing
+              description: Your ACH routing number
+          bank_account:
+            - name: account
+              description: Your bank account number
+            - name: bank_name
+              description: Name of the bank
+      withdraw:
+        enabled: true
+        min_amount: 1
+        max_amount: 100000
+        methods:
+          - ACH
+          - bank_account
+          - cash
+        fields:
+          ACH:
+            - name: account
+              description: ACH account number
+          bank_account:
+            - name: account
+              description: Bank account number
+          cash:
+            - name: location
+              description: Pickup location
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - iso4217:USD
+  - id: iso4217:USD
+    significant_decimals: 2
+    sep31:
+      enabled: true
+      receive:
+        methods:
+          - bank_account
+          - ACH
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+      buy_delivery_methods:
+        - name: ACH
+          description: ACH debits for US bank accounts
+      sell_delivery_methods:
+        - name: ACH
+          description: ACH credit for US bank accounts

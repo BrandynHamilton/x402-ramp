@@ -1,0 +1,9 @@
+pyproject.toml
+bindings/__init__.py
+bindings/evm_bridge.py
+bindings/smart_wallet.py
+bindings.egg-info/PKG-INFO
+bindings.egg-info/SOURCES.txt
+bindings.egg-info/dependency_links.txt
+bindings.egg-info/requires.txt
+bindings.egg-info/top_level.txt

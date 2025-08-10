@@ -1,0 +1,38 @@
+# docker-compose.yml
+services:
+  sep-server:
+    image: stellar/anchor-platform:latest
+    command: --sep-server
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./dev.env
+    volumes:
+      - ./config:/home
+  platform-server:
+    image: stellar/anchor-platform:latest
+    command: --platform-server
+    ports:
+      - "8085:8085"
+    env_file:
+      - ./dev.env
+    volumes:
+      - ./config:/home
+    depends_on:
+      - db
+  db:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./dev.env
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  business-server:
+    build:
+      context: ./business-server
+    container_name: business-server
+    env_file:
+      - business-server/.env
+    ports:
+      - "3000:3000"

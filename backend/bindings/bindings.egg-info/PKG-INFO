@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: bindings
+Version: 0.1.0
+Summary: Client bindings for x402 contracts
+Author-email: Your Name <you@example.com>
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: stellar-sdk
